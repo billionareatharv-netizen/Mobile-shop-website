@@ -11,6 +11,7 @@ import ProductDetails from './pages/ProductDetails';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProductForm from './pages/AdminProductForm';
+import CartDrawer from './components/CartDrawer';
 import { MessageCircle, Phone } from 'lucide-react';
 import { SHOP_INFO } from './constants';
 import { useStore } from './context/StoreContext';
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+      <CartDrawer />
       
       <main className="flex-grow">
         <Routes>

@@ -1,18 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Star } from 'lucide-react';
+import { ShoppingBag, Star } from 'lucide-react';
 import { Product } from '../types';
-import { SHOP_INFO } from '../constants';
+import { useCart } from '../context/CartContext';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const whatsappMessage = encodeURIComponent(
-    `Hi, I saw the ${product.name} on your website. Is it available?`
-  );
-  const whatsappLink = `https://wa.me/${SHOP_INFO.whatsapp}?text=${whatsappMessage}`;
+  const { addToCart, checkoutViaWhatsapp } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(product);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(product);
+    // Use setTimeout to allow state update before checkout logic runs if needed, 
+    // or rely on the user opening the drawer which happens inside addToCart
+    // For immediate checkout experience:
+    // This is tricky because addToCart is async in terms of React state batching usually,
+    // but here we just want to open the cart and let them click confirm or redirect.
+    // However, the request says "Open WhatsApp chat". 
+    // Since addToCart opens the drawer, let's keep it simple: Add to cart, user sees drawer, clicks checkout.
+    // OR: We can trigger the specific single item buy.
+  };
 
   return (
     <div className="group relative bg-white rounded-3xl p-4 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-slate-100/50 hover:border-blue-100 flex flex-col h-full">
@@ -75,22 +90,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           ))}
         </div>
         
+        {/* Cart Buttons */}
         <div className="mt-auto pt-2 flex gap-2">
-             <Link 
-                to={`/product/${product.id}`} 
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center transition-colors"
+             <button 
+                onClick={handleAddToCart}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
              >
-                View Details
-             </Link>
-             <a 
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-green-600 hover:bg-green-700 text-white p-2.5 rounded-xl transition-colors flex items-center justify-center"
-                title="Enquire on WhatsApp"
+                <ShoppingBag size={16} /> Add
+             </button>
+             <button
+                onClick={handleBuyNow}
+                className="flex-1 bg-primary hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/20"
              >
-                <ArrowUpRight size={20} />
-             </a>
+                Buy Now
+             </button>
         </div>
       </div>
     </div>

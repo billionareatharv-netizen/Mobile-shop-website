@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Smartphone, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Smartphone, User, LogOut, LayoutDashboard, ShoppingBag } from 'lucide-react';
 import { SHOP_INFO } from '../constants';
 import { useStore } from '../context/StoreContext';
+import { useCart } from '../context/CartContext';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin, currentUser, logout } = useStore();
+  const { toggleCart, cartCount } = useCart();
 
   const isHome = location.pathname === '/';
 
@@ -95,6 +97,21 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className={`flex items-center gap-3 pl-4 border-l ${isHome && !scrolled ? 'border-white/20' : 'border-slate-200'}`}>
+              
+              {/* Cart Button */}
+              <button
+                onClick={() => toggleCart(true)}
+                className={`p-2 rounded-full transition-colors relative ${isHome && !scrolled ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'}`}
+                title="View Cart"
+              >
+                <ShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full animate-pulse">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
               {currentUser ? (
                 <>
                   {isAdmin ? (
@@ -138,8 +155,22 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Menu Button - Visible when menu is closed */}
-          <div className="md:hidden relative z-50">
+          {/* Mobile Menu Actions */}
+          <div className="md:hidden flex items-center gap-2 relative z-50">
+            {/* Cart Icon Mobile */}
+            <button
+                onClick={() => toggleCart(true)}
+                className={`p-2 rounded-lg transition-colors relative ${mobileMenuButtonClass}`}
+                title="View Cart"
+              >
+                <ShoppingBag size={22} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={`p-2 rounded-lg transition-colors ${mobileMenuButtonClass}`}

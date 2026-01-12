@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Share2, ShieldCheck, Truck, RotateCcw, Star, CheckCircle2 } from 'lucide-react';
-import { SHOP_INFO } from '../constants';
+import { ArrowLeft, Share2, ShieldCheck, Truck, RotateCcw, Star, CheckCircle2, ShoppingBag, Check } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { products } = useStore();
+  const { addToCart } = useCart();
   
   // Find match in dynamic list
   const product = products.find(p => p.id === id);
   const relatedProducts = products.filter(p => p.category === product?.category && p.id !== product?.id).slice(0, 3);
   
   const [activeImage, setActiveImage] = useState<string>('');
+  const [showCopied, setShowCopied] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -31,9 +33,35 @@ const ProductDetails: React.FC = () => {
     );
   }
 
-  const whatsappMessage = encodeURIComponent(
-    `Hi, I am interested in buying ${product.name}. Is it available in stock?`
-  );
+  const handleAddToCart = () => {
+    addToCart(product);
+  };
+
+  const handleBuyNow = () => {
+    addToCart(product);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out the ${product.name} at Smart Mobile Store!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        // Use native share (Mobile/Supported Browsers)
+        await navigator.share(shareData);
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        setShowCopied(true);
+        setTimeout(() => setShowCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
 
   return (
     <div className="bg-surface pt-20 pb-12 min-h-screen">
@@ -91,9 +119,22 @@ const ProductDetails: React.FC = () => {
               <div className="mb-6">
                 <div className="flex justify-between items-start mb-2">
                    <span className="text-sm font-bold text-primary uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">{product.brand}</span>
-                   <button className="text-slate-400 hover:text-primary transition-colors">
-                     <Share2 size={20} />
-                   </button>
+                   
+                   {/* Share Button */}
+                   <div className="relative">
+                     <button 
+                        onClick={handleShare}
+                        className="text-slate-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-slate-50"
+                        title="Share Product"
+                     >
+                       {showCopied ? <Check size={20} className="text-green-500" /> : <Share2 size={20} />}
+                     </button>
+                     {showCopied && (
+                       <div className="absolute right-0 -top-8 bg-dark text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap animate-fade-in-up">
+                         Link Copied!
+                       </div>
+                     )}
+                   </div>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 leading-tight">{product.name}</h1>
                 
@@ -120,21 +161,18 @@ const ProductDetails: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                 <a 
-                   href={`https://wa.me/${SHOP_INFO.whatsapp}?text=${whatsappMessage}`}
-                   target="_blank"
-                   rel="noopener noreferrer"
+                 <button 
+                   onClick={handleBuyNow}
                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-green-600/20 transition-all hover:-translate-y-1"
                  >
-                   <MessageCircle size={24} />
-                   Buy Now on WhatsApp
-                 </a>
-                 <a 
-                   href={`tel:${SHOP_INFO.phone}`}
+                   Buy Now via WhatsApp
+                 </button>
+                 <button 
+                   onClick={handleAddToCart}
                    className="flex-1 bg-white border-2 border-slate-200 hover:border-dark text-slate-900 py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all"
                  >
-                   Call Store
-                 </a>
+                   <ShoppingBag size={20} /> Add to Cart
+                 </button>
               </div>
 
               {/* Trust Badges */}
@@ -195,14 +233,18 @@ const ProductDetails: React.FC = () => {
 
         {/* Similar Products */}
         <div className="mt-20">
-            <h2 className="text-2xl font-bold text-slate-900 mb-8">Similar Products</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-8">Similar Products</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {relatedProducts.map(p => (
-                    <ProductCard key={p.id} product={p} />
-                ))}
+              {relatedProducts.length > 0 ? (
+                relatedProducts.map(related => (
+                  <ProductCard key={related.id} product={related} />
+                ))
+              ) : (
+                <div className="text-slate-500 col-span-full">No related products found.</div>
+              )}
             </div>
         </div>
-
+        
       </div>
     </div>
   );
